@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Saumya Soni | Portfolio</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+    rel="stylesheet" />
+
+  <!-- GSAP for Animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* --- RESET & VARIABLES --- */
+    :root {
+      --bg-color: #080808;
+      --text-color: #f0f0f0;
+      --accent-color: #d4af37;
+      /* Gold */
+      --font-main: "Outfit", sans-serif;
+      --font-display: "Cinzel", serif;
+      --padding-mobile: 20px;
+      --padding-desktop: 80px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-main);
+      overflow-x: hidden;
+      /* Hide Default Cursor on Desktop */
+      cursor: none;
+      opacity: 0;
+      /* Hidden initially for loader */
+      visibility: hidden;
+    }
+
+    a,
+    button {
+      text-decoration: none;
+      color: inherit;
+      /* Remove default pointer, we use custom one */
+      cursor: none;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    /* --- CUSTOM CURSOR STYLES --- */
+    .cursor-dot,
+    .cursor-outline {
+      position: fixed;
+      top: 0;
+      left: 0;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      z-index: 9999;
+      pointer-events: none;
+      /* Allows clicking through */
+    }
+
+    .cursor-dot {
+      width: 8px;
+      height: 8px;
+      background-color: white;
+    }
+
+    .cursor-outline {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      transition: width 0.2s, height 0.2s, background-color 0.2s;
+    }
+
+    /* State: Hovering over clickable element */
+    body.hovering .cursor-outline {
+      width: 70px;
+      height: 70px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-color: transparent;
+      backdrop-filter: blur(2px);
+    }
+
+    /* --- BACKGROUND CANVAS --- */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.3;
+    }
+
+    /* --- LOADING OVERLAY --- */
+    .loader-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background-color: #000;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* --- THE LOGO (The Star of the Show) --- */
+    #main-logo {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      /* Start Big */
+      color: #fff;
+      z-index: 1001;
+      white-space: nowrap;
+      letter-spacing: 2px;
+      pointer-events: none;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- NAVIGATION --- */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 30px var(--padding-desktop);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      z-index: 900;
+      opacity: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 40px;
+    }
+
+    .nav-link {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      transition: color 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--accent-color);
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0%;
+      height: 1px;
+      background-color: var(--accent-color);
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      z-index: 902;
+    }
+
+    /* --- SECTIONS --- */
+    section {
+      padding: 100px var(--padding-desktop);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Hero */
+    .hero-content {
+      max-width: 800px;
+      margin-top: 100px;
+      z-index: 10;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: 5rem;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .hero-title span {
+      display: block;
+      transform: translateY(100%);
+    }
+
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: #888;
+      margin-bottom: 40px;
+      max-width: 500px;
+      opacity: 0;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 15px 35px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.8rem;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      opacity: 0;
+      background: transparent;
+    }
+
+    .btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 100%;
+      background-color: white;
+      z-index: -1;
+      transition: width 0.4s ease;
+    }
+
+    .btn:hover {
+      color: black;
+      border-color: white;
+    }
+
+    .btn:hover::before {
+      width: 100%;
+    }
+
+    /* Work */
+    .section-header {
+      margin-bottom: 60px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 3rem;
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+    }
+
+    .project-card {
+      display: block;
+      text-decoration: none;
+    }
+
+    .card-image-wrapper {
+      width: 100%;
+      height: 400px;
+      overflow: hidden;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .card-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.7s ease, opacity 0.5s ease;
+      opacity: 0.7;
+    }
+
+    .project-card:hover .card-image {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+
+    .project-info h3 {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+      color: white;
+    }
+
+    .project-info p {
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    .projects-grid .project-card:nth-child(even) {
+      transform: translateY(60px);
+    }
+
+    /* --- ABOUT IMAGE STYLING (NEW) --- */
+    .about-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .profile-container {
+      width: 100%;
+      height: 500px;
+      /* Adjust this height if you want it taller/shorter */
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+
+    /* The Image itself - Makes it fit perfectly */
+    .profile-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      /* KEY: This crops the image to fill the box */
+      object-position: center;
+      /* Centers the face */
+      filter: grayscale(100%);
+      /* Optional: Stylish B&W effect */
+      transition: filter 0.5s ease;
+    }
+
+    .profile-container:hover .profile-img {
+      filter: grayscale(0%);
+      /* Color on hover */
+    }
+
+    /* The Gold Box Frame Overlay */
+    .profile-frame {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      border: 1px solid var(--accent-color);
+      pointer-events: none;
+      /* Lets clicks pass through */
+      z-index: 2;
+    }
+
+    .about-text p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #aaa;
+      margin-bottom: 20px;
+    }
+
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .skill-tag {
+      padding: 8px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 30px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    /* Contact */
+    .contact-content {
+      text-align: center;
+    }
+
+    .big-link {
+      font-family: var(--font-display);
+      font-size: 5rem;
+      line-height: 1;
+      display: inline-block;
+      margin-bottom: 40px;
+      position: relative;
+      cursor: none;
+      /* Keep custom cursor here too */
+      transition: color 0.3s;
+    }
+
+    .big-link:hover {
+      color: var(--accent-color);
+    }
+
+    .footer-info {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 100px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    /* --- RESPONSIVE MEDIA QUERIES --- */
+
+    /* Tablet & Mobile shared */
+    @media (max-width: 1024px) {
+      :root {
+        --padding-desktop: 40px;
+      }
+
+      .hero-title {
+        font-size: 4rem;
+      }
+
+      #main-logo {
+        font-size: 2.5rem;
+      }
+    }
+
+    /* Mobile specific */
+    @media (max-width: 768px) {
+
+      /* Disable Custom Cursor on Touch Devices */
+      .cursor-dot,
+      .cursor-outline {
+        display: none;
+      }
+
+      body,
+      a,
+      button,
+      .big-link {
+        cursor: auto;
+        /* Restore system cursor */
+      }
+
+      .nav-links {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: #080808;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 899;
+        gap: 30px;
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+
+      .nav-links .nav-link {
+        font-size: 1.5rem;
+      }
+
+      .menu-btn {
+        display: block;
+        cursor: pointer;
+      }
+
+      section {
+        padding: 80px var(--padding-mobile);
+      }
+
+      .hero-title {
+        font-size: 3rem;
+      }
+
+      #main-logo {
+        font-size: 2rem;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+        gap: 50px;
+      }
+
+      .projects-grid .project-card:nth-child(even) {
+        transform: translateY(0);
+      }
+
+      .card-image-wrapper {
+        height: 250px;
+      }
+
+      .about-container {
+        grid-template-columns: 1fr;
+      }
+
+      /* Adjust Profile Image height for mobile */
+      .profile-container {
+        height: 400px;
+        margin-bottom: 30px;
+      }
+
+      .big-link {
+        font-size: 2.5rem;
+      }
+
+      .footer-info {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- CUSTOM CURSOR ELEMENTS -->
+  <div class="cursor-dot"></div>
+  <div class="cursor-outline"></div>
+
+  <!-- Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Loading Overlay -->
+  <div class="loader-overlay"></div>
+
+  <!-- THE LOGO: Starts Center, Moves to Top Left -->
+  <h1 id="main-logo">Saumya Soni</h1>
+
+  <!-- Navigation -->
+  <nav>
+    <ul class="nav-links">
+      <li><a href="#home" class="nav-link">Home</a></li>
+      <li><a href="#work" class="nav-link">Work</a></li>
+      <li><a href="#about" class="nav-link">About</a></li>
+      <!-- <li><a href="#contact" class="nav-link">Contact</a></li> -->
+    </ul>
+    <button class="menu-btn" onclick="toggleMenu()">
+      <i data-lucide="menu" size="32"></i>
+    </button>
+  </nav>
+
+  <main>
+    <!-- Hero Section -->
+    <section id="home">
+      <div class="hero-content">
+        <h2 class="hero-title">
+          <span>Digital</span>
+          <span>Experience</span>
+          <span style="color: var(--accent-color); font-style: italic">Designer</span>
+        </h2>
+        <p class="hero-subtitle">
+          I craft immersive web experiences that shock the senses and elevate
+          brands. Minimalist code, maximalist impact.
+        </p>
+        <a href="#work" class="btn">View My Work</a>
+      </div>
+    </section>
+
+    <!-- Work Section -->
+    <section id="work">
+      <div class="section-header">
+        <h2 class="section-title">Selected Work</h2>
+        <p>2024 — Present</p>
+      </div>
+
+      <div class="projects-grid">
+        <a href="https://orofinn.in" class="project-card" target="_blank">
+          <div class="card-image-wrapper">
+            <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2070&auto=format&fit=crop"
+              alt="Orofin Project" class="card-image" />
+          </div>
+          <div class="project-info">
+            <h3>Orofin</h3>
+            <p>Gold & Silver Loan Platform</p>
+          </div>
+        </a>
+
+        <a href="https://jkfincap.in" class="project-card" target="_blank">
+          <div class="card-image-wrapper">
+            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop"
+              alt="JKfincap Project" class="card-image" />
+          </div>
+          <div class="project-info">
+            <h3>JKfincap</h3>
+            <p>Web Systems / Capital Growth Platform</p>
+          </div>
+        </a>
+
+        <a href="https://vksonisamaj.in" class="project-card" target="_blank">
+          <div class="card-image-wrapper">
+            <img
+              src="https://images.unsplash.com/photo-1696041757950-62e2c030283b?q=80&w=1631&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              alt="Vksonisamaj Project" class="card-image" />
+          </div>
+          <div class="project-info">
+            <h3>Vksonisamaj</h3>
+            <p>E-Commerce / UI/UX</p>
+          </div>
+        </a>
+
+      </div>
+    </section>
+    <!-- About Section -->
+    <section id="about">
+      <div class="about-container">
+        <!-- NEW: Image Box with Frame Overlay -->
+        <div class="profile-container">
+          <!-- CHANGE IMAGE HERE: Replace src with your image path (e.g., tony stark.jpg) -->
+          <img src="itachi.jpeg" alt="Saumya Soni" class="profile-img" />
+
+          <!-- This is the gold border frame overlay -->
+          <div class="profile-frame"></div>
+        </div>
+
+        <div class="about-text">
+          <h2 class="section-title" style="margin-bottom: 30px">Who I Am</h2>
+          <p>
+            I am Saumya, a creative developer obsessed with motion and
+            interaction. I believe a website should be more than just
+            information; it should be a journey.
+          </p>
+          <p>
+            When users visit your site, I want them to stop, stare, and wonder
+            "How did they do that?". I combine technical precision with
+            artistic flair.
+          </p>
+
+          <div class="skills">
+            <span class="skill-tag">HTML5</span>
+            <span class="skill-tag">CSS3</span>
+            <span class="skill-tag">JavaScript</span>
+            <!-- <span class="skill-tag">GSAP</span> -->
+            <span class="skill-tag">PHP</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+      <div class="contact-content">
+        <p style="
+              text-transform: uppercase;
+              letter-spacing: 2px;
+              margin-bottom: 20px;
+              color: var(--accent-color);
+            ">
+          Start a Project
+        </p>
+        <a href="#" class="big-link">Let's Create<br />Magic Together</a>
+      </div>
+
+      <div class="footer-info">
+        <div>&copy; 2026 Saumya Soni Portfolio</div>
+        <div style="display: flex; gap: 20px">
+          <a href="#">Instagram</a>
+          <a href="#">Twitter</a>
+          <a href="#">LinkedIn</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Initialize Icons
+    lucide.createIcons();
+
+    // --- CUSTOM CURSOR LOGIC ---
+    const cursorDot = document.querySelector(".cursor-dot");
+    const cursorOutline = document.querySelector(".cursor-outline");
+
+    // Move cursor
+    window.addEventListener("mousemove", (e) => {
+      const posX = e.clientX;
+      const posY = e.clientY;
+
+      // Dot follows instantly
+      cursorDot.style.left = `${posX}px`;
+      cursorDot.style.top = `${posY}px`;
+
+      // Outline follows with delay (using Animation API for smoothness)
+      cursorOutline.animate(
+        {
+          left: `${posX}px`,
+          top: `${posY}px`,
+        },
+        { duration: 500, fill: "forwards" }
+      );
+    });
+
+    // Add hover effect to interactive elements
+    // This makes the circle grow when hovering links/buttons
+    const interactives = document.querySelectorAll(
+      "a, button, .project-card, .big-link"
+    );
+    interactives.forEach((el) => {
+      el.addEventListener("mouseenter", () =>
+        document.body.classList.add("hovering")
+      );
+      el.addEventListener("mouseleave", () =>
+        document.body.classList.remove("hovering")
+      );
+    });
+
+    // --- MENU LOGIC ---
+    function toggleMenu() {
+      const navLinks = document.querySelector(".nav-links");
+      navLinks.classList.toggle("active");
+    }
+
+    document.querySelectorAll(".nav-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        document.querySelector(".nav-links").classList.remove("active");
+      });
+    });
+
+    // --- LOADING & SHOCK EFFECT ---
+    window.addEventListener("load", () => {
+      document.body.style.opacity = "1";
+      document.body.style.visibility = "visible";
+
+      const tl = gsap.timeline();
+
+      tl.to("#main-logo", {
+        scale: 1.1,
+        duration: 0.8,
+        ease: "power1.inOut",
+      })
+        .to(".loader-overlay", {
+          height: 0,
+          duration: 1.2,
+          ease: "power3.inOut",
+        })
+        .to(
+          "#main-logo",
+          {
+            top: "35px",
+            left: "40px",
+            xPercent: 0,
+            yPercent: 0,
+            scale: 1,
+            fontSize: "1.5rem",
+            fontWeight: "700",
+            duration: 1.2,
+            ease: "power3.inOut",
+            pointerEvents: "auto",
+          },
+          "<"
+        )
+        .to("nav", { opacity: 1, duration: 0.5 })
+        .to(
+          ".hero-title span",
+          {
+            y: 0,
+            stagger: 0.1,
+            duration: 1,
+            ease: "power4.out",
+          },
+          "-=0.5"
+        )
+        .to(".hero-subtitle", { opacity: 1, y: 0, duration: 1 }, "-=0.8")
+        .to(".btn", { opacity: 1, y: 0, duration: 1 }, "-=0.8");
+    });
+
+    // --- SCROLL ANIMATIONS ---
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.utils.toArray(".project-card").forEach((card, i) => {
+      gsap.from(card, {
+        scrollTrigger: {
+          trigger: card,
+          start: "top 85%",
+        },
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out",
+        delay: i * 0.1,
+      });
+    });
+
+    gsap.utils.toArray(".section-title").forEach((title) => {
+      gsap.from(title, {
+        scrollTrigger: {
+          trigger: title,
+          start: "top 80%",
+        },
+        y: 30,
+        opacity: 0,
+        duration: 1,
+        ease: "power2.out",
+      });
+    });
+
+    // --- CANVAS ANIMATION ---
+    const canvas = document.getElementById("bg-canvas");
+    const ctx = canvas.getContext("2d");
+
+    let width, height;
+    let particles = [];
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+      }
+      draw() {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 40; i++) particles.push(new Particle());
+
+    let mouse = { x: null, y: null };
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach((p) => {
+        p.update();
+        p.draw();
+        if (mouse.x) {
+          let dx = mouse.x - p.x;
+          let dy = mouse.y - p.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            ctx.strokeStyle = `rgba(255,255,255,${0.1 - dist / 1500})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+          }
+        }
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+
+</html>
