@@ -113,9 +113,7 @@
       left: 0;
       z-index: -1;
       opacity: 0.8;
-      /* Increased visibility */
       pointer-events: none;
-      /* Prevents blocking */
     }
 
     /* --- LOADING OVERLAY --- */
@@ -445,9 +443,13 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 990;
-      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+      z-index: 995;
+      /* Ensure it stays above canvas */
+      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
       transition: transform 0.3s ease;
+      visibility: visible !important;
+      /* Force visibility */
+      opacity: 1 !important;
     }
 
     .ai-chat-btn:hover {
@@ -460,11 +462,11 @@
       right: 40px;
       width: 350px;
       height: 450px;
-      background: rgba(10, 10, 10, 0.8);
+      background: rgba(10, 10, 10, 0.9);
       backdrop-filter: blur(15px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 15px;
-      z-index: 990;
+      z-index: 995;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -591,6 +593,14 @@
 
     @media (max-width: 768px) {
 
+      /* Keep background dots visible on mobile */
+      #bg-canvas {
+        display: block;
+        opacity: 0.6;
+      }
+
+      /* Hide desktop-specific cursor visual helpers, but NOT the dot/outline if we want them, 
+           or hide them but keep background logic. Usually better to hide them on mobile touch. */
       .cursor-dot,
       .cursor-outline {
         display: none;
@@ -676,15 +686,19 @@
         text-align: center;
       }
 
+      /* Ensure AI Chat is visible and reachable on mobile */
       .ai-chat-window {
         width: calc(100% - 40px);
         right: 20px;
-        bottom: 100px;
+        bottom: 90px;
+        height: 60vh;
       }
 
       .ai-chat-btn {
         bottom: 20px;
         right: 20px;
+        width: 55px;
+        height: 55px;
       }
     }
   </style>
@@ -836,7 +850,7 @@
   </main>
 
   <!-- AI CHAT WIDGET -->
-  <button class="ai-chat-btn" onclick="toggleChat()">
+  <button class="ai-chat-btn" onclick="toggleChat()" aria-label="Open AI Chat">
     <i data-lucide="sparkles"></i>
   </button>
 
@@ -868,15 +882,18 @@
     const cursorOutline = document.querySelector(".cursor-outline");
 
     window.addEventListener("mousemove", (e) => {
-      const posX = e.clientX;
-      const posY = e.clientY;
-      cursorDot.style.left = `${posX}px`;
-      cursorDot.style.top = `${posY}px`;
+      // Only update visuals if not on mobile/touch
+      if (window.innerWidth > 768) {
+        const posX = e.clientX;
+        const posY = e.clientY;
+        cursorDot.style.left = `${posX}px`;
+        cursorDot.style.top = `${posY}px`;
 
-      cursorOutline.animate(
-        { left: `${posX}px`, top: `${posY}px` },
-        { duration: 500, fill: "forwards" }
-      );
+        cursorOutline.animate(
+          { left: `${posX}px`, top: `${posY}px` },
+          { duration: 500, fill: "forwards" }
+        );
+      }
     });
 
     const interactives = document.querySelectorAll("a, button, .project-card, .big-link");
@@ -948,7 +965,7 @@
       });
     });
 
-    // --- CANVAS ANIMATION (Updated to be highly visible) ---
+    // --- CANVAS ANIMATION ---
     const canvas = document.getElementById("bg-canvas");
     const ctx = canvas.getContext("2d");
 
@@ -968,9 +985,9 @@
       constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.8; // slightly faster
-        this.vy = (Math.random() - 0.5) * 0.8;
-        this.size = Math.random() * 3 + 1; // Larger dots
+        this.vx = (Math.random() - 0.5) * 0.6;
+        this.vy = (Math.random() - 0.5) * 0.6;
+        this.size = Math.random() * 2 + 1;
       }
       update() {
         this.x += this.vx;
@@ -979,21 +996,27 @@
         if (this.y < 0 || this.y > height) this.vy *= -1;
       }
       draw() {
-        // White Dots
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    // Increased particle count
-    for (let i = 0; i < 80; i++) particles.push(new Particle());
+    // Slightly lower count for performance across devices
+    const particleCount = window.innerWidth < 768 ? 40 : 80;
+    for (let i = 0; i < particleCount; i++) particles.push(new Particle());
 
     let mouse = { x: null, y: null };
     window.addEventListener("mousemove", (e) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
+    });
+
+    // Handle touch interaction for background dots
+    window.addEventListener("touchmove", (e) => {
+      mouse.x = e.touches[0].clientX;
+      mouse.y = e.touches[0].clientY;
     });
 
     function animate() {
@@ -1005,10 +1028,12 @@
           let dx = mouse.x - p.x;
           let dy = mouse.y - p.y;
           let dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 180) { // Slightly longer reach
-            // White lines fading based on distance
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 - dist / 800})`;
-            ctx.lineWidth = 1.5; // Thicker lines
+
+          const maxDist = window.innerWidth < 768 ? 100 : 180;
+
+          if (dist < maxDist) {
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 - dist / (maxDist * 2)})`;
+            ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(mouse.x, mouse.y);
@@ -1021,7 +1046,7 @@
     animate();
 
     // --- GEMINI AI INTEGRATION ---
-    const apiKey = ""; // API Key provided by execution environment
+    const apiKey = "";
     const modelEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     const systemPrompt = "You are an AI assistant for a creative digital designer named Saumya Soni. Her portfolio features stunning minimalist design, animations (GSAP, WebGL), and impressive web development skills. Answer questions about her professionally, concisely, and keep answers under 3 sentences. If someone asks for contact info, provide hello@saumya.dev.";
 
@@ -1042,7 +1067,6 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Exponential Backoff for API
     async function fetchWithRetry(url, options, retries = 5) {
       let delay = 1000;
       for (let i = 0; i < retries; i++) {
@@ -1053,7 +1077,7 @@
         } catch (error) {
           if (i === retries - 1) throw error;
           await new Promise(res => setTimeout(res, delay));
-          delay *= 2; // 1s, 2s, 4s, 8s, 16s
+          delay *= 2;
         }
       }
     }
@@ -1070,7 +1094,7 @@
 
       if (!apiKey) {
         typingIndicator.style.display = 'none';
-        appendMessage("API key is missing. The execution environment needs to provide it.", 'ai');
+        appendMessage("AI services are currently limited.", 'ai');
         return;
       }
 
@@ -1091,10 +1115,9 @@
         appendMessage(aiResponse, 'ai');
       } catch (error) {
         typingIndicator.style.display = 'none';
-        appendMessage("Sorry, I encountered an error connecting to the AI. Please try again later.", 'ai');
+        appendMessage("Sorry, I encountered an error connecting to the AI.", 'ai');
       }
     });
-
   </script>
 </body>
 
